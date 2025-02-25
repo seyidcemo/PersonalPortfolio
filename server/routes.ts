@@ -8,7 +8,7 @@ const ADMIN_PASSWORD = "portfolio123"; // Basit bir şifre kontrolü için
 export async function registerRoutes(app: Express) {
   // Admin authentication middleware
   const authenticateAdmin = (req: any, res: any, next: any) => {
-    const { password } = req.headers;
+    const password = req.headers.password;
     if (password !== ADMIN_PASSWORD) {
       return res.status(401).json({ message: "Unauthorized" });
     }

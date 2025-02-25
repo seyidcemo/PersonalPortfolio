@@ -53,9 +53,10 @@ export default function Admin() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertContent) => {
-      await apiRequest("POST", "/api/contents", data, {
-        headers: { password: ADMIN_PASSWORD }
+      const response = await apiRequest("POST", "/api/contents", data, {
+        password: ADMIN_PASSWORD
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -77,9 +78,10 @@ export default function Admin() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/contents/${id}`, undefined, {
-        headers: { password: ADMIN_PASSWORD }
+      const response = await apiRequest("DELETE", `/api/contents/${id}`, undefined, {
+        password: ADMIN_PASSWORD
       });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -251,14 +253,12 @@ export default function Admin() {
                 <FormField
                   control={form.control}
                   name="link"
-                  render={({ field: { value, onChange, ...field }}) => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Bağlantı (İsteğe bağlı)</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="https://..." 
-                          value={value || ""} 
-                          onChange={onChange}
                           {...field} 
                         />
                       </FormControl>
