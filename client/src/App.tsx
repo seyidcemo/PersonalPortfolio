@@ -8,6 +8,7 @@ import Software from "@/pages/Software";
 import Music from "@/pages/Music";
 import GameReviews from "@/pages/GameReviews";
 import Blog from "@/pages/Blog";
+import Admin from "@/pages/Admin"; // Added import for Admin component
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
         <Route path="/music" component={Music} />
         <Route path="/game-reviews" component={GameReviews} />
         <Route path="/blog" component={Blog} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

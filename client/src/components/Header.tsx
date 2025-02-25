@@ -8,6 +8,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle
 } from "@/components/ui/navigation-menu";
+import { Settings } from "lucide-react";
 
 const navigation = [
   { name: "Software", href: "/software" },
@@ -27,7 +28,7 @@ export default function Header() {
             Portfolio
           </Button>
         </Link>
-        
+
         <NavigationMenu className="ml-auto">
           <NavigationMenuList>
             {navigation.map((item) => (
@@ -44,6 +45,19 @@ export default function Header() {
                 </Link>
               </NavigationMenuItem>
             ))}
+            <NavigationMenuItem>
+              <Link href="/admin">
+                <NavigationMenuLink 
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    location === "/admin" && "bg-accent text-accent-foreground"
+                  )}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Yönetim
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>
