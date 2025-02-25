@@ -13,10 +13,13 @@ function copyDir(src: string, dest: string) {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
   }
+
   const entries = fs.readdirSync(src, { withFileTypes: true });
+
   for (const entry of entries) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
+
     if (entry.isDirectory()) {
       copyDir(srcPath, destPath);
     } else {
@@ -76,24 +79,26 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    // In production, ensure public folder has the built files
-    const publicDir = path.resolve(__dirname, "..", "public");
-    const distPublicDir = path.resolve(__dirname, "..", "dist", "public");
-
     // Copy build files to public directory if they exist
-    if (fs.existsSync(distPublicDir)) {
-      copyDir(distPublicDir, publicDir);
+    const sourceDir = path.resolve(__dirname, "..", "public");
+    const targetDir = path.resolve(__dirname, "..", "dist");
+
+    if (fs.existsSync(sourceDir)) {
+      copyDir(sourceDir, targetDir);
+      console.log('Build files copied successfully to dist folder');
+    } else {
+      console.error('Source directory public not found');
     }
 
     // Serve static files from public directory
-    app.use(express.static(publicDir));
+    app.use(express.static(targetDir));
 
     // Handle client-side routing
     app.get("*", (req, res) => {
       if (req.path.startsWith("/api")) {
         return res.status(404).json({ message: "Not Found" });
       }
-      res.sendFile(path.resolve(publicDir, "index.html"));
+      res.sendFile(path.resolve(targetDir, "index.html"));
     });
   }
 
