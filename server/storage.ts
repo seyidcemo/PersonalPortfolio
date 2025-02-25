@@ -5,6 +5,7 @@ export interface IStorage {
   getContentsByType(type: string): Promise<Content[]>;
   getContent(id: number): Promise<Content | undefined>;
   createContent(content: InsertContent): Promise<Content>;
+  deleteContent(id: number): Promise<void>;
   createMessage(message: InsertMessage): Promise<Message>;
 }
 
@@ -63,6 +64,10 @@ export class MemStorage implements IStorage {
     };
     this.contents.set(id, newContent);
     return newContent;
+  }
+
+  async deleteContent(id: number): Promise<void> {
+    this.contents.delete(id);
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {

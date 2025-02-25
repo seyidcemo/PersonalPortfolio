@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertContentSchema, type InsertContent, contentTypes } from "@shared/schema";
+import { insertContentSchema, type InsertContent, contentTypes, type Content } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,10 +24,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Trash2 } from "lucide-react";
+
+const ADMIN_PASSWORD = "portfolio123"; // Basit şifre kontrolü için
 
 export default function Admin() {
   const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
   const [preview, setPreview] = useState<InsertContent | null>(null);
+
+  const { data: contents } = useQuery<Content[]>({
+    queryKey: ["/api/contents"],
+    enabled: isAuthenticated
+  });
 
   const form = useForm<InsertContent>({
     resolver: zodResolver(insertContentSchema),
@@ -41,9 +51,11 @@ export default function Admin() {
     },
   });
 
-  const mutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: async (data: InsertContent) => {
-      await apiRequest("POST", "/api/contents", data);
+      await apiRequest("POST", "/api/contents", data, {
+        headers: { password: ADMIN_PASSWORD }
+      });
     },
     onSuccess: () => {
       toast({
@@ -63,10 +75,67 @@ export default function Admin() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/contents/${id}`, undefined, {
+        headers: { password: ADMIN_PASSWORD }
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "İçerik silindi",
+        description: "İçerik başarıyla silindi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contents"] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "İçerik silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogin = () => {
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+    } else {
+      toast({
+        title: "Hata",
+        description: "Yanlış şifre",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePreview = () => {
     const result = form.getValues();
     setPreview(result);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader>
+            <CardTitle>Yönetici Girişi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                placeholder="Şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button onClick={handleLogin}>Giriş</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -84,7 +153,7 @@ export default function Admin() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+              <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="type"
@@ -182,11 +251,16 @@ export default function Admin() {
                 <FormField
                   control={form.control}
                   name="link"
-                  render={({ field }) => (
+                  render={({ field: { value, onChange, ...field }}) => (
                     <FormItem>
                       <FormLabel>Bağlantı (İsteğe bağlı)</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <Input 
+                          placeholder="https://..." 
+                          value={value || ""} 
+                          onChange={onChange}
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -201,8 +275,8 @@ export default function Admin() {
                   >
                     Önizle
                   </Button>
-                  <Button type="submit" disabled={mutation.isPending}>
-                    {mutation.isPending ? "Ekleniyor..." : "İçerik Ekle"}
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Ekleniyor..." : "İçerik Ekle"}
                   </Button>
                 </div>
               </form>
@@ -242,6 +316,46 @@ export default function Admin() {
           </Card>
         )}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mevcut İçerikler</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {contents?.map((content) => (
+              <Card key={content.id}>
+                <CardContent className="pt-6">
+                  <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
+                    <img
+                      src={content.imageUrl}
+                      alt={content.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-semibold">{content.title}</h3>
+                      <p className="text-sm text-muted-foreground">{content.category}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        if (window.confirm("Bu içeriği silmek istediğinize emin misiniz?")) {
+                          deleteMutation.mutate(content.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
