@@ -3,9 +3,27 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Recursive directory copy function
+function copyDir(src: string, dest: string) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
 
 const app = express();
 app.use(express.json());
@@ -58,16 +76,24 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    // In production, serve the static files from the dist/public directory
-    app.use(express.static(path.resolve(__dirname, "..", "dist", "public")));
+    // In production, ensure public folder has the built files
+    const publicDir = path.resolve(__dirname, "..", "public");
+    const distPublicDir = path.resolve(__dirname, "..", "dist", "public");
 
-    // Handle client-side routing by serving index.html for all non-API routes
+    // Copy build files to public directory if they exist
+    if (fs.existsSync(distPublicDir)) {
+      copyDir(distPublicDir, publicDir);
+    }
+
+    // Serve static files from public directory
+    app.use(express.static(publicDir));
+
+    // Handle client-side routing
     app.get("*", (req, res) => {
-      // Don't serve index.html for API routes
       if (req.path.startsWith("/api")) {
         return res.status(404).json({ message: "Not Found" });
       }
-      res.sendFile(path.resolve(__dirname, "..", "dist", "public", "index.html"));
+      res.sendFile(path.resolve(publicDir, "index.html"));
     });
   }
 
