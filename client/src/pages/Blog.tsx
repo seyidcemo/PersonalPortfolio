@@ -12,7 +12,7 @@ export default function Blog() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Blog</h1>
         <p className="text-muted-foreground mt-2">
-          Thoughts, articles and writing across various platforms
+          Maymun olsam daha mı mutlu olurdum? Muhtemelen.
         </p>
       </div>
 

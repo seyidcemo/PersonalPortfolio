@@ -12,7 +12,7 @@ export default function Software() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Software Projects</h1>
         <p className="text-muted-foreground mt-2">
-          A collection of my software development work and contributions
+          Tavsiye: Yazılım okumayın
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import Header from "./Header";
+import Header from "@/components/Header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Layout({ children }: { children: ReactNode }) {

@@ -24,7 +24,7 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <Link href="/">
           <Button variant="link" className="text-xl font-bold">
-            Portfolio
+            seyidcem
           </Button>
         </Link>
 

@@ -12,7 +12,7 @@ export default function Music() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Music</h1>
         <p className="text-muted-foreground mt-2">
-          My musical journey as a singer-songwriter
+          şairâne delilikten sıkıldım
         </p>
       </div>
 
