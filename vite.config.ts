@@ -19,11 +19,11 @@ export default defineConfig({
   root: path.resolve(__dirname, "client"),
   base: "/",
   build: {
-    outDir: "dist",
+    outDir: "../dist",
     emptyOutDir: true,
   },
   server: {
-    port: 5000,
+    port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
